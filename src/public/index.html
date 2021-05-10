@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fastify Auth</title>
+  </head>
+  <body>
+    <h1>Fastify Auth</h1>
+
+    <form id="register">
+      <fieldset>
+        <legend>Register</legend>
+        <div>
+          <label for="Email">Email: </label>
+          <input type="email" name="email" />
+        </div>
+        <div>
+          <label for="password">Password: </label>
+          <input type="password" name="password" />
+        </div>
+        <button type="submit">Register</button>
+      </fieldset>
+    </form>
+
+    <form id="login">
+      <fieldset>
+        <legend>Login</legend>
+        <div>
+          <label for="Email">Email: </label>
+          <input type="email" name="email" />
+        </div>
+        <div>
+          <label for="password">Password: </label>
+          <input type="password" name="password" />
+        </div>
+        <button type="submit">Login</button>
+      </fieldset>
+    </form>
+
+    <form id="logout">
+      <fieldset>
+        <legend>Logout</legend>
+        <button type="submit">Logout</button>
+      </fieldset>
+    </form>
+
+    <script>
+      const register = document.querySelector("#register");
+      const login = document.querySelector("#login");
+      const logout = document.querySelector("#logout");
+
+      register.addEventListener("submit", onRegister);
+      login.addEventListener("submit", onLogin);
+      logout.addEventListener("click", onLogout);
+
+      async function onRegister(event) {
+        event.preventDefault();
+        try {
+          const form = getFormValues(event.target);
+          console.log(form);
+          const res = await fetch("/register", {
+            method: "POST",
+            body: JSON.stringify(form),
+            headers: { "Content-type": "application/json" },
+          });
+          console.log(res);
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      async function onLogin(event) {
+        event.preventDefault();
+        try {
+          const res = await fetch("/login", {
+            method: "POST",
+            body: JSON.stringify(getFormValues(event.target)),
+            headers: { "Content-type": "application/json" },
+          });
+          console.log(res);
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      async function onLogout(event) {
+        event.preventDefault();
+        try {
+          const res = await fetch("/logout", { method: "POST" });
+          console.log(res);
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      function getFormValues(form) {
+        const elements = Array.from(form);
+        const formValues = elements.reduce((accumulator, element) => {
+          if (element.name) {
+            accumulator[element.name] = element.value;
+          }
+
+          return accumulator;
+        }, {});
+
+        return formValues;
+      }
+    </script>
+  </body>
+</html>
