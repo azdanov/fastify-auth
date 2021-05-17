@@ -21,6 +21,9 @@
       "plugin:unicorn/recommended",
       "plugin:prettier/recommended"
     ],
+    "plugins": [
+      "html"
+    ],
     "parserOptions": {
       "ecmaVersion": 12,
       "sourceType": "module"
@@ -34,6 +37,7 @@
     "eslint": "^7.26.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-config-standard": "^16.0.2",
+    "eslint-plugin-html": "^6.1.2",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^3.4.0",
