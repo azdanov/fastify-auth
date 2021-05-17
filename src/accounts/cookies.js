@@ -4,7 +4,7 @@ import { createTokens } from "./tokens.js";
 
 const { ObjectId } = mongo;
 
-const JWTSecret = process.env.JWT_SECRET;
+const { JWT_SECRET, ROOT_DOMAIN } = process.env.JWT_SECRET;
 
 export async function getUser(request, reply) {
   try {
@@ -13,16 +13,14 @@ export async function getUser(request, reply) {
 
     if (request?.cookies?.accessToken) {
       const { accessToken } = request.cookies;
-      const decodedAccessToken = jwt.verify(accessToken, JWTSecret);
+      const decodedAccessToken = jwt.verify(accessToken, JWT_SECRET);
 
-      const currentUser = user.findOne({
+      return user.findOne({
         _id: ObjectId(decodedAccessToken?.userId),
       });
-
-      return currentUser;
     } else if (request?.cookies?.refreshToken) {
       const { refreshToken } = request.cookies;
-      const { sessionId } = jwt.verify(refreshToken, JWTSecret);
+      const { sessionId } = jwt.verify(refreshToken, JWT_SECRET);
       const currentSession = await session.findOne({ sessionId });
 
       if (currentSession.valid) {
@@ -50,14 +48,16 @@ export async function refreshTokens(sessionId, userId, reply) {
     reply
       .setCookie("refreshToken", refreshToken, {
         path: "/",
-        domain: "localhost",
+        domain: ROOT_DOMAIN,
         httpOnly: true,
+        secure: true,
         expires,
       })
       .setCookie("accessToken", accessToken, {
         path: "/",
-        domain: "localhost",
+        domain: ROOT_DOMAIN,
         httpOnly: true,
+        secure: true,
       });
   } catch (error) {
     console.error(error);
