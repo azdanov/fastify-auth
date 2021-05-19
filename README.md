@@ -9,6 +9,10 @@ User is saved to a DB with a session assigned to this user.
 No proper validation or error handling is done.
 
 Modify `hosts` to add Caddy support for https development:
-`127.0.0.1:3000 fastify-auth.dev`
+
+```text
+127.0.0.1 fastify-auth.dev
+127.0.0.1 api.fastify-auth.dev
+```
 
 Then run `caddy run --config Caddyfile` and `npm run start` to have https enabled dev environment.

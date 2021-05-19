@@ -4,7 +4,7 @@ import { createTokens } from "./tokens.js";
 
 const { ObjectId } = mongo;
 
-const { JWT_SECRET, ROOT_DOMAIN } = process.env.JWT_SECRET;
+const { JWT_SECRET, ROOT_DOMAIN, REFRESH_EXPIRES_DAYS } = process.env;
 
 export async function getUser(request, reply) {
   try {
@@ -13,6 +13,7 @@ export async function getUser(request, reply) {
 
     if (request?.cookies?.accessToken) {
       const { accessToken } = request.cookies;
+      console.log({ accessToken, JWT_SECRET });
       const decodedAccessToken = jwt.verify(accessToken, JWT_SECRET);
 
       return user.findOne({
@@ -41,9 +42,7 @@ export async function refreshTokens(sessionId, userId, reply) {
   try {
     const { accessToken, refreshToken } = await createTokens(sessionId, userId);
     const now = new Date();
-    const expires = now.setDate(
-      now.getDate() + process.env.REFRESH_EXPIRES_DAYS
-    );
+    const expires = now.setDate(now.getDate() + REFRESH_EXPIRES_DAYS);
 
     reply
       .setCookie("refreshToken", refreshToken, {

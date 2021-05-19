@@ -2,6 +2,8 @@ import "./environment.js";
 import { fastify } from "fastify";
 import fastifyStatic from "fastify-static";
 import fastifyCookie from "fastify-cookie";
+import fastifySensible from "fastify-sensible";
+import fastifyCors from "fastify-cors";
 import { connectDatabase } from "./database.js";
 import { registerUser } from "./accounts/register.js";
 import { login, logout } from "./accounts/auth.js";
@@ -12,12 +14,18 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const SUCCESS = "SUCCESS";
-const FAILED = "FAILED";
 
 const app = fastify();
 
 async function startApp() {
   try {
+    app.register(fastifySensible);
+
+    app.register(fastifyCors, {
+      origin: [/fastify-auth\.dev$/],
+      credentials: true,
+    });
+
     app.register(fastifyCookie, {
       secret: process.env.COOKIE_SECRET,
     });
@@ -42,11 +50,7 @@ async function startApp() {
         }
       } catch (error) {
         console.error(error);
-        reply.send({
-          data: {
-            status: FAILED,
-          },
-        });
+        reply.badRequest();
       }
     });
 
@@ -63,11 +67,7 @@ async function startApp() {
         });
       } catch (error) {
         console.error(error);
-        reply.send({
-          data: {
-            status: FAILED,
-          },
-        });
+        reply.unauthorized();
       }
     });
 
@@ -83,11 +83,7 @@ async function startApp() {
       } catch (error) {
         console.error(error);
 
-        reply.send({
-          data: {
-            status: FAILED,
-          },
-        });
+        reply.internalServerError();
       }
     });
 
@@ -101,9 +97,7 @@ async function startApp() {
             data: user,
           });
         } else {
-          reply.send({
-            status: FAILED,
-          });
+          reply.notFound();
         }
       } catch (error) {
         throw new Error(error);
