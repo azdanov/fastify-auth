@@ -10,6 +10,7 @@ import { login, logout } from "./accounts/auth.js";
 import { getUser } from "./accounts/cookies.js";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { sendEmail } from "./mail/index.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -92,6 +93,13 @@ async function startApp() {
         const user = await getUser(request, reply);
 
         if (user?._id) {
+          sendEmail({
+            to: "bar@example.com",
+            subject: "Hello!",
+            text: "Hello world!",
+            html: "<b>Hello world!</b>",
+          });
+
           reply.send({
             status: SUCCESS,
             data: user,
