@@ -15,4 +15,4 @@ Modify `hosts` to add Caddy support for https development:
 127.0.0.1 api.fastify-auth.dev
 ```
 
-Then run `caddy run --config Caddyfile` and `npm run start` to have https enabled dev environment.
+Then run `docker compose up -d` for MongoDB, `caddy run --config Caddyfile` for reverse proxy with "Let's Encrypt" certificates and `npm run start` to lunch fastify with nodemon.

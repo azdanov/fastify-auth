@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 const { compare } = bcrypt;
 
-const JWTSecret = process.env.JWT_SECRET;
+const { JWT_SECRET, ROOT_DOMAIN } = process.env;
 
 export async function login({ email, password }, request, reply) {
   const { user } = await import("../models/user.js");
@@ -32,12 +32,18 @@ export async function logout(request, reply) {
 
     if (request?.cookies?.refreshToken) {
       const { refreshToken } = request.cookies;
-      const { sessionId } = jwt.verify(refreshToken, JWTSecret);
+      const { sessionId } = jwt.verify(refreshToken, JWT_SECRET);
 
       await session.deleteOne({ sessionId });
     }
 
-    reply.clearCookie("refreshToken").clearCookie("accessToken");
+    reply
+      .clearCookie("refreshToken", {
+        domain: ROOT_DOMAIN,
+      })
+      .clearCookie("accessToken", {
+        domain: ROOT_DOMAIN,
+      });
   } catch (error) {
     console.error(error);
   }

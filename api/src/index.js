@@ -1,6 +1,5 @@
 import "./environment.js";
 import { fastify } from "fastify";
-import fastifyStatic from "fastify-static";
 import fastifyCookie from "fastify-cookie";
 import fastifySensible from "fastify-sensible";
 import fastifyCors from "fastify-cors";
@@ -8,13 +7,8 @@ import { connectDatabase } from "./database.js";
 import { registerUser } from "./accounts/register.js";
 import { login, logout } from "./accounts/auth.js";
 import { getUser } from "./accounts/cookies.js";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { sendEmail } from "./mail/index.js";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-const SUCCESS = "SUCCESS";
+import { createVerifyEmailLink } from "./accounts/verify.js";
 
 const app = fastify();
 
@@ -31,20 +25,24 @@ async function startApp() {
       secret: process.env.COOKIE_SECRET,
     });
 
-    app.register(fastifyStatic, {
-      root: join(__dirname, "public"),
-    });
-
     app.post("/register", {}, async (request, reply) => {
       try {
         const { email, password } = request.body;
         const userId = await registerUser({ email, password });
 
         if (userId) {
+          const verifyEmailLink = await createVerifyEmailLink(email);
+
+          sendEmail({
+            to: email,
+            subject: "Verify your account",
+            text: `To verify visit this link: ${verifyEmailLink}`,
+            html: `<p>To verify visit <a href="${verifyEmailLink}">this link</a></p>`,
+          });
+
           await login({ email, password }, request, reply);
           reply.send({
             data: {
-              status: SUCCESS,
               userId,
             },
           });
@@ -62,7 +60,6 @@ async function startApp() {
         const userId = await login({ email, password }, request, reply);
         reply.send({
           data: {
-            status: SUCCESS,
             userId,
           },
         });
@@ -76,11 +73,7 @@ async function startApp() {
       try {
         await logout(request, reply);
 
-        reply.send({
-          data: {
-            status: SUCCESS,
-          },
-        });
+        reply.send();
       } catch (error) {
         console.error(error);
 
@@ -93,15 +86,7 @@ async function startApp() {
         const user = await getUser(request, reply);
 
         if (user?._id) {
-          sendEmail({
-            to: "bar@example.com",
-            subject: "Hello!",
-            text: "Hello world!",
-            html: "<b>Hello world!</b>",
-          });
-
           reply.send({
-            status: SUCCESS,
             data: user,
           });
         } else {
@@ -113,7 +98,7 @@ async function startApp() {
     });
 
     await app.listen(process.env.PORT);
-    console.log(`Server: http://localhost:${process.env.PORT}`);
+    console.log(`Server API: http://localhost:${process.env.PORT}`);
   } catch (error) {
     console.error(error);
   }
