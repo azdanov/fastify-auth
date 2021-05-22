@@ -4,8 +4,8 @@ import fastifyCookie from "fastify-cookie";
 import fastifySensible from "fastify-sensible";
 import fastifyCors from "fastify-cors";
 import { connectDatabase } from "./database.js";
-import { registerUser } from "./accounts/register.js";
-import { login, logout } from "./accounts/auth.js";
+import { registerUser, changePassword } from "./accounts/register.js";
+import { authorizeUser, login, logout } from "./accounts/auth.js";
 import { getUser } from "./accounts/cookies.js";
 import { sendEmail } from "./mail/index.js";
 import {
@@ -28,7 +28,7 @@ async function startApp() {
       secret: process.env.COOKIE_SECRET,
     });
 
-    app.post("/register", {}, async (request, reply) => {
+    app.post("/api/register", {}, async (request, reply) => {
       try {
         const { email, password } = request.body;
         const userId = await registerUser({ email, password });
@@ -71,7 +71,30 @@ async function startApp() {
       }
     });
 
-    app.post("/login", {}, async (request, reply) => {
+    app.post("/api/change-password", {}, async (request, reply) => {
+      try {
+        const { oldPassword, newPassword } = request.body;
+        const user = await getUser(request, reply);
+
+        if (user?.email?.address) {
+          const { isAuthorized, userId } = await authorizeUser({
+            email: user.email.address,
+            password: oldPassword,
+          });
+
+          if (isAuthorized) {
+            await changePassword(userId, newPassword);
+            return reply.code(200).send();
+          }
+        }
+        return reply.unauthorized();
+      } catch (error) {
+        console.error(error);
+        return reply.unauthorized();
+      }
+    });
+
+    app.post("/api/login", {}, async (request, reply) => {
       try {
         const { email, password } = request.body;
 
@@ -87,7 +110,7 @@ async function startApp() {
       }
     });
 
-    app.post("/logout", {}, async (request, reply) => {
+    app.post("/api/logout", {}, async (request, reply) => {
       try {
         await logout(request, reply);
 
@@ -99,7 +122,7 @@ async function startApp() {
       }
     });
 
-    app.get("/test", {}, async (request, reply) => {
+    app.get("/api/test", {}, async (request, reply) => {
       try {
         const user = await getUser(request, reply);
 

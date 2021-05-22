@@ -31,6 +31,5 @@ export async function sendEmail({
     html,
   });
 
-  console.log(info);
   console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
 }

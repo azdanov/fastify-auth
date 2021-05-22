@@ -1,8 +1,8 @@
-import { v4 as uuid } from "uuid";
+import crypto from "node:crypto";
 
 export async function createSession(userId, connection) {
   try {
-    const sessionId = uuid();
+    const sessionId = crypto.randomUUID();
     const { ip, userAgent } = connection;
     const { session } = await import("../models/session.js");
 

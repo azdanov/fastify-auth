@@ -6,16 +6,21 @@ const { compare } = bcrypt;
 
 const { JWT_SECRET, ROOT_DOMAIN } = process.env;
 
-export async function login({ email, password }, request, reply) {
+export async function authorizeUser({ email, password }) {
   const { user } = await import("../models/user.js");
   const userData = await user.findOne({ "email.address": email });
   const isAuthorized = await compare(password, userData.password);
+
+  return { isAuthorized, userId: userData._id };
+}
+
+export async function login({ email, password }, request, reply) {
+  const { isAuthorized, userId } = await authorizeUser({ email, password });
 
   if (!isAuthorized) {
     throw new Error("Unauthorized");
   }
 
-  const userId = userData._id;
   const sessionId = await createSession(userId, {
     ip: request.ip,
     userAgent: request.headers["user-agent"],

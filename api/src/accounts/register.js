@@ -15,3 +15,15 @@ export async function registerUser({ email, password }) {
 
   return result.insertedId;
 }
+
+export async function changePassword(userId, newPassword) {
+  const { user } = await import("../models/user.js");
+
+  const salt = await genSalt(10);
+  const hashedPassword = await hash(newPassword, salt);
+
+  return user.updateOne(
+    { _id: userId },
+    { $set: { password: hashedPassword } }
+  );
+}

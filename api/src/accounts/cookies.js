@@ -13,7 +13,7 @@ export async function getUser(request, reply) {
 
     if (request?.cookies?.accessToken) {
       const { accessToken } = request.cookies;
-      console.log({ accessToken, JWT_SECRET });
+
       const decodedAccessToken = jwt.verify(accessToken, JWT_SECRET);
 
       return user.findOne({
