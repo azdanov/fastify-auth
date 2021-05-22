@@ -8,7 +8,10 @@ import { registerUser } from "./accounts/register.js";
 import { login, logout } from "./accounts/auth.js";
 import { getUser } from "./accounts/cookies.js";
 import { sendEmail } from "./mail/index.js";
-import { createVerifyEmailLink } from "./accounts/verify.js";
+import {
+  createVerifyEmailLink,
+  validateVerifyEmail,
+} from "./accounts/verify.js";
 
 const app = fastify();
 
@@ -50,6 +53,21 @@ async function startApp() {
       } catch (error) {
         console.error(error);
         reply.badRequest();
+      }
+    });
+
+    app.post("/api/verify", {}, async (request, reply) => {
+      try {
+        const { email, token } = request.body;
+
+        const isValid = await validateVerifyEmail(email, token);
+        if (isValid) {
+          return reply.code(200).send();
+        }
+        return reply.unauthorized();
+      } catch (error) {
+        console.error(error);
+        return reply.unauthorized();
       }
     });
 
