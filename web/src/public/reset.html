@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+    <title>Reset - Fastify Auth</title>
+  </head>
+  <body>
+    <h1>Reset - Fastify Auth</h1>
+
+    <form id="reset-password">
+      <fieldset>
+        <legend>Reset Password</legend>
+        <div>
+          <label>Password: </label>
+          <input type="password" name="password" />
+        </div>
+        <button type="submit">Reset Password</button>
+      </fieldset>
+    </form>
+
+    <script>
+      const resetPassword = document.querySelector("#reset-password");
+
+      resetPassword.addEventListener("submit", onResetPassword);
+
+      async function onResetPassword(event) {
+        event.preventDefault();
+        try {
+          const form = getFormValues(event.target);
+          const [email, time, token] = window.location.pathname.split("/").slice(-3);
+
+          const values = {
+            ...form,
+            email: decodeURIComponent(email),
+            time,
+            token,
+          };
+          const response = await fetch(
+            "https://api.fastify-auth.dev/api/reset-password",
+            {
+              method: "POST",
+              body: JSON.stringify(values),
+              credentials: "include",
+              headers: { "Content-type": "application/json" },
+            }
+          );
+          console.log(await response.json());
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      function getFormValues(form) {
+        const elements = [...form];
+        // eslint-disable-next-line unicorn/no-array-reduce
+        const formValues = elements.reduce((accumulator, element) => {
+          if (element.name) {
+            accumulator[element.name] = element.value;
+          }
+
+          return accumulator;
+        }, {});
+
+        return formValues;
+      }
+    </script>
+  </body>
+</html>

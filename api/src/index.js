@@ -8,6 +8,7 @@ import { registerUser, changePassword } from "./accounts/register.js";
 import { authorizeUser, login, logout } from "./accounts/auth.js";
 import { getUser } from "./accounts/cookies.js";
 import { sendEmail } from "./mail/index.js";
+import { createResetLink, validateResetEmail } from "./accounts/reset.js";
 import {
   createVerifyEmailLink,
   validateVerifyEmail,
@@ -39,8 +40,8 @@ async function startApp() {
           sendEmail({
             to: email,
             subject: "Verify your account",
-            text: `To verify visit this link: ${verifyEmailLink}`,
-            html: `<p>To verify visit <a href="${verifyEmailLink}">this link</a></p>`,
+            text: `Verify email: ${verifyEmailLink}`,
+            html: `<a href="${verifyEmailLink}">Verify email</a>`,
           });
 
           await login({ email, password }, request, reply);
@@ -94,6 +95,48 @@ async function startApp() {
       }
     });
 
+    app.post("/api/forgot-password", {}, async (request, reply) => {
+      try {
+        const { email } = request.body;
+        const link = await createResetLink(email);
+
+        if (link) {
+          await sendEmail({
+            to: email,
+            subject: "Reset your password",
+            text: `Reset password: ${link}`,
+            html: `<a href="${link}">Reset password</a>`,
+          });
+        }
+
+        return reply.code(200).send();
+      } catch (error) {
+        console.error(error);
+        return reply.unauthorized();
+      }
+    });
+
+    app.post("/api/reset-password", {}, async (request, reply) => {
+      try {
+        const { email, password, token, time } = request.body;
+        const isValid = await validateResetEmail(token, email, time);
+        if (!isValid) {
+          return reply.unauthorized();
+        }
+
+        const { user } = await import("./models/user.js");
+        const foundUser = await user.findOne({ "email.address": email });
+
+        if (foundUser._id) {
+          await changePassword(foundUser._id, password);
+          return reply.code(200).send();
+        }
+      } catch (error) {
+        console.error(error);
+        return reply.unauthorized();
+      }
+    });
+
     app.post("/api/login", {}, async (request, reply) => {
       try {
         const { email, password } = request.body;
@@ -117,7 +160,6 @@ async function startApp() {
         reply.send();
       } catch (error) {
         console.error(error);
-
         reply.internalServerError();
       }
     });
